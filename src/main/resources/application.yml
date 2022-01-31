@@ -1,0 +1,8 @@
+micronaut:
+  application:
+    name: localrules
+redis.uri: redis://localhost
+command:
+  url: http://localhost:17394
+  token: test
+
