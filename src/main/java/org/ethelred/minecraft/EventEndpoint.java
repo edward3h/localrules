@@ -6,10 +6,12 @@ import io.micronaut.context.annotation.Property;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.scheduling.TaskScheduler;
 import io.micronaut.scheduling.annotation.Async;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -21,9 +23,11 @@ public class EventEndpoint {
     private final StatefulRedisConnection<String, String> redisConnection;
     private final CommandRunner commandRunner;
     private final String token;
+    private final TaskScheduler taskScheduler;
 
-    public EventEndpoint(StatefulRedisConnection<String, String> redisConnection, CommandRunner commandRunner, @Property(name = "command.token") String token) {
+    public EventEndpoint(StatefulRedisConnection<String, String> redisConnection, TaskScheduler taskScheduler, CommandRunner commandRunner, @Property(name = "command.token") String token) {
         this.redisConnection = redisConnection;
+        this.taskScheduler = taskScheduler;
         this.commandRunner = commandRunner;
         this.token = token;
     }
@@ -34,7 +38,6 @@ public class EventEndpoint {
         return HttpResponse.noContent();
     }
 
-    @Async
     public void doStuffWithEvent(MinecraftServerEvent event) {
         if (
                 MinecraftServerEvent.Type.PLAYER_CONNECTED == event.type()
@@ -43,9 +46,11 @@ public class EventEndpoint {
             var r = redisCommands.set(event.playerName(), "true", SetArgs.Builder.exAt(expiry()).nx());
             LOGGER.debug("r = {}", r);
             if ("OK".equals(r)) {
-                commandRunner.runCommand(
-                        "give %s diamond".formatted(event.playerName()),
-                        token
+                taskScheduler.schedule(Duration.ofSeconds(10), () ->
+                    commandRunner.runCommand(
+                            "give %s diamond".formatted(event.playerName()),
+                            token
+                    )
                 );
             }
 

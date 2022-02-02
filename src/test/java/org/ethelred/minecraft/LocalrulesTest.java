@@ -92,7 +92,7 @@ class LocalrulesTest {
         var response = client.toBlocking()
                 .exchange(HttpRequest.POST("/webhook", event));
         Assertions.assertEquals(response.status(), HttpStatus.NO_CONTENT);
-        Thread.sleep(1000); // crappy
+        Thread.sleep(11000); // crappy
         Assertions.assertEquals(1, commands.size());
         Assertions.assertEquals("give Steve123 diamond", commands.get(0));
     }
@@ -107,7 +107,7 @@ class LocalrulesTest {
         response = client.toBlocking()
                 .exchange(HttpRequest.POST("/webhook", event));
         Assertions.assertEquals(response.status(), HttpStatus.NO_CONTENT);
-        Thread.sleep(1000); // crappy
+        Thread.sleep(11000); // crappy
         Assertions.assertEquals(1, commands.size());
     }
 }
