@@ -15,6 +15,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,7 @@ class LocalrulesTest {
         var redisUri = RedisURI.create(redisContainer.getContainerIpAddress(), redisContainer.getMappedPort(6379));
         server = ApplicationContext.run(
                 EmbeddedServer.class,
-                PropertySource.of("test", Map.of("redis.uri", redisUri.toURI()))
+                PropertySource.of("test", Map.of("redis.uri", redisUri.toURI(), "command.delay", Duration.ofMillis(500)))
         );
     }
 
@@ -92,7 +93,7 @@ class LocalrulesTest {
         var response = client.toBlocking()
                 .exchange(HttpRequest.POST("/webhook", event));
         Assertions.assertEquals(response.status(), HttpStatus.NO_CONTENT);
-        Thread.sleep(11000); // crappy
+        Thread.sleep(1500); // crappy
         Assertions.assertEquals(1, commands.size());
         Assertions.assertEquals("give Steve123 diamond", commands.get(0));
     }
@@ -107,7 +108,7 @@ class LocalrulesTest {
         response = client.toBlocking()
                 .exchange(HttpRequest.POST("/webhook", event));
         Assertions.assertEquals(response.status(), HttpStatus.NO_CONTENT);
-        Thread.sleep(11000); // crappy
+        Thread.sleep(1500); // crappy
         Assertions.assertEquals(1, commands.size());
     }
 }

@@ -24,12 +24,16 @@ public class EventEndpoint {
     private final CommandRunner commandRunner;
     private final String token;
     private final TaskScheduler taskScheduler;
+    private final Duration delay;
 
-    public EventEndpoint(StatefulRedisConnection<String, String> redisConnection, TaskScheduler taskScheduler, CommandRunner commandRunner, @Property(name = "command.token") String token) {
+    public EventEndpoint(StatefulRedisConnection<String, String> redisConnection, TaskScheduler taskScheduler,
+                         CommandRunner commandRunner, @Property(name = "command.token") String token,
+                         @Property(name = "command.delay") Duration delay) {
         this.redisConnection = redisConnection;
         this.taskScheduler = taskScheduler;
         this.commandRunner = commandRunner;
         this.token = token;
+        this.delay = delay;
     }
 
     @Post("/webhook")
@@ -46,7 +50,7 @@ public class EventEndpoint {
             var r = redisCommands.set(event.playerName(), "true", SetArgs.Builder.exAt(expiry()).nx());
             LOGGER.debug("r = {}", r);
             if ("OK".equals(r)) {
-                taskScheduler.schedule(Duration.ofSeconds(10), () ->
+                taskScheduler.schedule(delay, () ->
                     commandRunner.runCommand(
                             "give %s diamond".formatted(event.playerName()),
                             token
