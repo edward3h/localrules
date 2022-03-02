@@ -88,7 +88,7 @@ class LocalrulesTest {
 
     @Test
     void testTrigger() throws InterruptedException, MalformedURLException {
-        var event = new MinecraftServerEvent(MinecraftServerEvent.Type.PLAYER_CONNECTED, "abcde", "test", "Foxcraft", "Steve123", "12345");
+        var event = Map.of("type", "PLAYER_CONNECTED", "worldName", "Foxcraft", "playerName", "Steve123");
         var client = HttpClient.create(new URL("http://" + server.getHost() + ":" + server.getPort()));
         var response = client.toBlocking()
                 .exchange(HttpRequest.POST("/webhook", event));
@@ -100,7 +100,7 @@ class LocalrulesTest {
 
     @Test
     void testTrigger2() throws InterruptedException, MalformedURLException {
-        var event = new MinecraftServerEvent(MinecraftServerEvent.Type.PLAYER_CONNECTED, "abcde", "test", "Foxcraft", "Steve4", "12345");
+        var event = Map.of("type", "PLAYER_CONNECTED", "worldName", "Foxcraft", "playerName", "Steve4");
         var client = HttpClient.create(new URL("http://" + server.getHost() + ":" + server.getPort()));
         var response = client.toBlocking()
                 .exchange(HttpRequest.POST("/webhook", event));

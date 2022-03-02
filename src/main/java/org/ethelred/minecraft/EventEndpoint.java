@@ -7,7 +7,6 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.scheduling.TaskScheduler;
-import io.micronaut.scheduling.annotation.Async;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 
 @Controller
 @Debug
@@ -37,22 +37,22 @@ public class EventEndpoint {
     }
 
     @Post("/webhook")
-    public HttpResponse<?> handleEvent(MinecraftServerEvent event) {
+    public HttpResponse<?> handleEvent(Map<String, String> event) {
         doStuffWithEvent(event);
         return HttpResponse.noContent();
     }
 
-    public void doStuffWithEvent(MinecraftServerEvent event) {
+    public void doStuffWithEvent(Map<String, String> event) {
         if (
-                MinecraftServerEvent.Type.PLAYER_CONNECTED == event.type()
-                        && "Foxcraft".equals(event.worldName())) {
+                "PLAYER_CONNECTED".equals(event.get("type"))
+                        && "Foxcraft".equals(event.get("worldName"))) {
             var redisCommands = redisConnection.sync();
-            var r = redisCommands.set(event.playerName(), "true", SetArgs.Builder.exAt(expiry()).nx());
+            var r = redisCommands.set(event.get("playerName"), "true", SetArgs.Builder.exAt(expiry()).nx());
             LOGGER.debug("r = {}", r);
             if ("OK".equals(r)) {
                 taskScheduler.schedule(delay, () ->
                     commandRunner.runCommand(
-                            "give %s diamond".formatted(event.playerName()),
+                            "give %s diamond".formatted(event.get("playerName")),
                             token
                     )
                 );
